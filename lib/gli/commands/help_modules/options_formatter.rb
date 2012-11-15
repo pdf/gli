@@ -2,15 +2,19 @@ module GLI
   module Commands
     module HelpModules
       class OptionsFormatter
+        SORTERS = {
+          :manually => lamda {|list| list },
+          :alpha    => lamda {|a,b| a.name.to_s <=> b.name.to_s },
+        }
+
         def initialize(flags_and_switches,wrapper_class)
           @flags_and_switches = flags_and_switches
           @wrapper_class = wrapper_class
         end
 
         def format
-          list_formatter = ListFormatter.new(@flags_and_switches.values.sort { |a,b| 
-            a.name.to_s <=> b.name.to_s 
-          }.map { |option|
+          sorter = SORTERS[@app.help_sort_type]
+          list_formatter = ListFormatter.new(sorter.call(@flags_and_switches.values).map { |option|
             if option.respond_to? :argument_name
               [option_names_for_help_string(option,option.argument_name),description_with_default(option)]
             else
